@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1 class="text-center mb-4">Bienvenue dans Ma Boutique</h1>
+
+<div class="row">
+    {% for produit in produits %}
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">{{ produit.nom }}</h5>
+                <p class="card-text">{{ produit.description }}</p>
+                <p class="card-text"><strong>Prix :</strong> {{ produit.prix_vente }} €</p>
+                <p class="card-text"><strong>Stock :</strong> {{ produit.quantite }}</p>
+                <form action="{{ url_for('ajouter_au_panier', produit_id=produit.id) }}" method="POST">
+                    <div class="input-group mb-3">
+                        <input type="number" name="quantite" class="form-control" value="1" min="1" max="{{ produit.quantite }}">
+                        <button type="submit" class="btn btn-primary">Ajouter au panier</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
