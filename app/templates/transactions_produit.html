@@ -1,0 +1,84 @@
+{% extends "layout.html" %}
+
+{% block title %}Gestion des Transactions{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mt-5 text-center"><i class="fas fa-exchange-alt"></i> Gestion des Transactions</h1>
+
+    <!-- Formulaire pour ajouter une transaction -->
+    <div class="card mt-4 shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h5 class="card-title"><i class="fas fa-plus-circle"></i> Ajouter une transaction</h5>
+        </div>
+        <div class="card-body">
+            <form action="{{ url_for('routes.ajouter_transaction') }}" method="POST">
+                <div class="mb-3">
+                    <label for="produit_id" class="form-label">Produit</label>
+                    <select class="form-control" id="produit_id" name="produit_id" required>
+                        <option value="">Sélectionner un produit</option>
+                        {% for produit in produits %}
+                        <option value="{{ produit.id }}">{{ produit.nom }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="type" class="form-label">Type de transaction</label>
+                    <select class="form-control" id="type" name="type" required>
+                        <option value="entree">Entrée</option>
+                        <option value="sortie">Sortie</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="quantite" class="form-label">Quantité</label>
+                    <input type="number" class="form-control" id="quantite" name="quantite" required>
+                </div>
+                <div class="mb-3">
+                    <label for="description" class="form-label">Description</label>
+                    <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="fas fa-save"></i> Ajouter
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Liste des transactions -->
+    <div class="card mt-4 shadow-sm">
+        <div class="card-header bg-success text-white">
+            <h5 class="card-title"><i class="fas fa-list"></i> Historique des transactions</h5>
+        </div>
+        <div class="card-body">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Produit</th>
+                        <th>Type</th>
+                        <th>Quantité</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for transaction in transactions %}
+                    <tr>
+                        <td>{{ transaction.date_transaction.strftime('%d/%m/%Y %H:%M') }}</td>
+                        <td>{{ transaction.produit.nom }}</td>
+                        <td>
+                            {% if transaction.type == 'entree' %}
+                                <span class="badge bg-success">Entrée</span>
+                            {% else %}
+                                <span class="badge bg-danger">Sortie</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ transaction.quantite }}</td>
+                        <td>{{ transaction.description }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,280 @@
+{% extends "layout.html" %}
+
+{% block title %}Gestion des Ventes{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mt-5 text-center"><i class="fas fa-shopping-cart"></i> Gestion des Ventes</h1>
+
+    <!-- Afficher les messages flash -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- Conteneur pour les cartes côte à côte -->
+    <div class="d-flex flex-wrap justify-content-between mt-4">
+        <!-- Carte pour ajouter un produit au panier -->
+        <div class="card shadow-sm border-0" style="width: 48%;">
+            <div class="card-header text-white" style="background-color: #2C3E50;">
+                <h5 class="card-title mb-0"><i class="fas fa-plus-circle me-2"></i> Ajouter un produit au panier</h5>
+            </div>
+            <div class="card-body">
+                <form id="ajouterProduitForm" action="{{ url_for('routes.ventes') }}" method="POST">
+                    <!-- Champ de recherche de produit -->
+                    <div class="mb-3">
+                        <label for="searchProduit" class="form-label">Rechercher un produit</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-white border-end-0"><i class="fas fa-search" style="color: #34495E;"></i></span>
+                            <input type="text" id="searchProduit" class="form-control border-start-0" placeholder="Rechercher un produit..." list="produitList">
+                            <datalist id="produitList">
+                                {% for produit in produits %}
+                                <option value="{{ produit.nom }} ({{ produit.quantite }} en stock)" data-id="{{ produit.id }}" data-prix="{{ produit.prix }}">{{ produit.nom }}</option>
+                                {% endfor %}
+                            </datalist>
+                        </div>
+                        <input type="hidden" id="produit_id" name="produit_id">
+                        <div id="produitError" class="text-danger mt-2" style="display: none;">
+                            <i class="fas fa-exclamation-circle me-2"></i>Le produit sélectionné n'existe pas. Veuillez choisir un produit valide dans la liste.
+                        </div>
+                    </div>
+
+                    <!-- Champ de quantité -->
+                    <div class="mb-3">
+                        <label for="quantite" class="form-label">Quantité</label>
+                        <input type="number" class="form-control" id="quantite" name="quantite" required min="1">
+                    </div>
+
+                    <!-- Champ de prix unitaire -->
+                    <div class="mb-3">
+                        <label for="prix" class="form-label">Prix unitaire</label>
+                        <input type="number" class="form-control" id="prix" name="prix" step="0.01" required min="0.01">
+                    </div>
+
+                    <!-- Bouton pour ajouter au panier -->
+                    <button type="submit" name="ajouter_au_panier" class="btn text-white w-100" style="background-color: #2980B9;">
+                        <i class="fas fa-save me-2"></i> Ajouter au panier
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Carte pour afficher le panier et finaliser la vente -->
+        <div class="card shadow-sm border-0" style="width: 48%;">
+            <div class="card-header text-white" style="background-color: #27AE60;">
+                <h5 class="card-title mb-0"><i class="fas fa-list me-2"></i> Panier</h5>
+            </div>
+            <div class="card-body">
+                {% if panier %}
+                <table class="table table-striped table-hover">
+                    <thead style="background-color: #2c3e50; color: white;">
+                        <tr>
+                            <th>Produit</th>
+                            <th>Quantité</th>
+                            <th>Prix unitaire</th>
+                            <th>Total</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in panier %}
+                        <tr>
+                            <td>{{ item.produit.nom }}</td>
+                            <td>{{ item.quantite }}</td>
+                            <td>{{ item.prix }}</td>
+                            <td>{{ item.prix * item.quantite }}</td>
+                            <td>
+                                <form action="{{ url_for('routes.ventes') }}" method="POST" style="display:inline;">
+                                    <input type="hidden" name="panier_id" value="{{ item.id }}">
+                                    <button type="submit" name="supprimer_du_panier" class="btn btn-sm btn-danger" onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce produit du panier ?');">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <h5 class="text-end">Total : {{ total }}</h5>
+
+                <!-- Bouton pour vider le panier -->
+                <form action="{{ url_for('routes.ventes') }}" method="POST" class="text-end">
+                    <button type="submit" name="vider_panier" class="btn btn-danger" onclick="return confirm('Êtes-vous sûr de vouloir vider le panier ?');">
+                        <i class="fas fa-trash me-2"></i> Vider le panier
+                    </button>
+                </form>
+
+                <!-- Section pour finaliser la vente -->
+                <div class="mt-4">
+                    <h5 class="card-title mb-3"><i class="fas fa-check-circle me-2"></i> Finaliser la vente</h5>
+                    <form action="{{ url_for('routes.ventes') }}" method="POST">
+                        <div class="mb-3">
+                            <label for="nom_client" class="form-label">Nom du client</label>
+                            <input type="text" class="form-control" id="nom_client" name="nom_client" required>
+                        </div>
+                        <button type="submit" name="finaliser_vente" class="btn text-white w-100" style="background-color: #2980B9;">
+                            <i class="fas fa-save me-2"></i> Finaliser la vente
+                        </button>
+                    </form>
+                </div>
+                {% else %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i> Votre panier est vide.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Section pour l'aperçu de la facture -->
+    {% if facture is not none %}
+    <div class="card mt-4 shadow-sm border-0" id="facture">
+        <div class="card-header text-white" style="background-color: #2C3E50;">
+            <h5 class="card-title mb-0"><i class="fas fa-file-invoice me-2"></i> Facture #{{ facture.id }}</h5>
+        </div>
+        <div class="card-body">
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <h5>Informations du client</h5>
+                    <p><strong>Nom :</strong> {{ facture.nom_client }}</p>
+                </div>
+                <div class="col-md-6 text-end">
+                    <h5>Informations de la facture</h5>
+                    <p><strong>Date :</strong> {{ facture.date_facture.strftime('%d/%m/%Y %H:%M') }}</p>
+                </div>
+            </div>
+
+            <table class="table table-striped table-hover">
+                <thead style="background-color: #2c3e50; color: white;">
+                    <tr>
+                        <th>Produit</th>
+                        <th>Quantité</th>
+                        <th>Prix unitaire</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for vente in ventes %}
+                    <tr>
+                        <td>{{ vente.produit.nom }}</td>
+                        <td>{{ vente.quantite }}</td>
+                        <td>{{ vente.produit.prix }}</td>
+                        <td>{{ vente.montant_total }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <th colspan="3" class="text-end">Total</th>
+                        <th>{{ facture.montant_total }}</th>
+                    </tr>
+                </tfoot>
+            </table>
+
+            <!-- Bouton pour imprimer la facture -->
+            <div class="text-center mt-4 no-print">
+                <button onclick="imprimerFacture()" class="btn btn-light">
+                    <i class="fas fa-print me-2"></i> Imprimer la facture
+                </button>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Script pour la gestion de la recherche de produit et de la validation -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchProduit = document.getElementById('searchProduit');
+        const produitList = document.getElementById('produitList');
+        const produitIdInput = document.getElementById('produit_id');
+        const prixInput = document.getElementById('prix');
+        const produitError = document.getElementById('produitError');
+        const ajouterProduitForm = document.getElementById('ajouterProduitForm');
+
+        // Mettre à jour l'ID du produit et le prix lorsque l'utilisateur sélectionne un produit
+        searchProduit.addEventListener('input', function() {
+            const selectedOption = Array.from(produitList.options).find(option => {
+                const produitName = option.value.split(' (')[0];
+                return produitName === searchProduit.value.split(' (')[0];
+            });
+
+            if (selectedOption) {
+                produitIdInput.value = selectedOption.getAttribute('data-id');
+                prixInput.value = selectedOption.getAttribute('data-prix');
+                produitError.style.display = 'none';
+            } else {
+                produitIdInput.value = '';
+                prixInput.value = '';
+                produitError.style.display = 'block';
+            }
+        });
+
+        // Validation du formulaire d'ajout de produit au panier
+        ajouterProduitForm.addEventListener('submit', function(event) {
+            const quantite = document.getElementById('quantite').value;
+            const prix = document.getElementById('prix').value;
+
+            // Validation de la quantité
+            if (quantite <= 0) {
+                alert("La quantité doit être un nombre positif et non nul.");
+                event.preventDefault(); // Empêcher la soumission du formulaire
+                return false;
+            }
+
+            // Validation du prix
+            if (prix <= 0) {
+                alert("Le prix doit être un nombre positif et non nul.");
+                event.preventDefault(); // Empêcher la soumission du formulaire
+                return false;
+            }
+        });
+    });
+</script>
+
+<!-- Script pour imprimer la facture -->
+<script>
+    function imprimerFacture() {
+        const factureSection = document.getElementById('facture').innerHTML;
+        const printWindow = window.open('', '', 'height=600,width=800');
+        printWindow.document.write(`
+            <html>
+                <head>
+                    <title>Facture #{{ facture.id }}</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; margin: 20px; }
+                        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                        th { background-color: #f2f2f2; }
+                        .text-end { text-align: right; }
+                        .text-center { text-align: center; }
+                        .card-header { background-color: #2C3E50; color: white; padding: 10px; }
+                        .card-body { padding: 20px; }
+                        .no-print { display: none; } /* Masquer les éléments avec la classe no-print lors de l'impression */
+                    </style>
+                </head>
+                <body>
+                    ${factureSection}
+                </body>
+            </html>
+        `);
+        printWindow.document.close();
+        printWindow.print();
+    }
+</script>
+
+<!-- Styles pour masquer le bouton d'impression lors de l'impression -->
+<style>
+    @media print {
+        .no-print {
+            display: none !important;
+        }
+    }
+</style>
+{% endblock %}

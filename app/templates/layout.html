@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Gestion des Appartements{% endblock %}</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <!-- Custom CSS -->
+    <style>
+        body {
+            display: flex;
+            min-height: 100vh;
+            flex-direction: column;
+            margin: 0;
+            background-color: #f8f9fa;
+        }
+        .sidebar {
+            width: 250px;
+            background-color: #2c3e50;
+            color: white;
+            padding: 15px;
+            position: fixed;
+            height: 100%;
+            overflow-y: auto;
+            transition: width 0.3s;
+        }
+        .sidebar .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            color: white;
+            text-decoration: none;
+            transition: background-color 0.3s;
+        }
+        .sidebar .nav-link:hover {
+            background-color: #34495e;
+        }
+        .sidebar .nav-link i {
+            margin-right: 10px;
+        }
+        .content {
+            margin-left: 250px;
+            padding: 20px;
+            flex-grow: 1;
+            background-color: #ecf0f1;
+            width: calc(100% - 250px);
+            transition: margin-left 0.3s;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #bdc3c7;
+            padding: 10px 20px;
+            border-bottom: 1px solid #95a5a6;
+        }
+        .header .profile img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        .dropdown-menu {
+            margin-top: 10px;
+        }
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+        }
+        .dropdown-item i {
+            margin-right: 10px;
+        }
+        .btn-custom {
+            margin: 0 5px;
+        }
+        .btn-custom.delete {
+            color: red;
+        }
+        .btn-custom.edit {
+            color: orange;
+        }
+        .nav-dropdown {
+            display: none;
+            margin-left: 20px;
+        }
+        .dropdown-toggle::after {
+            content: '\f078';
+            font-family: "Font Awesome 5 Free";
+            font-weight: 900;
+            margin-left: auto;
+        }
+        .dropdown-toggle.active::after {
+            content: '\f077';
+        }
+        .nav-link:hover + .nav-dropdown,
+        .nav-dropdown:hover {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <h2>Menu</h2>
+        <a href="/" class="nav-link"><i class="fas fa-home"></i> Accueil</a>
+        
+        <!-- Produits -->
+        <a href="#produits" class="nav-link dropdown-toggle">
+            <i class="fas fa-cubes"></i> Produits
+        </a>
+        <div class="nav-dropdown" id="produits">
+            <a href="/gestion_produits" class="nav-link">
+                <i class="fas fa-edit"></i> Gérer Produits
+            </a>
+            <a href="/ajouter_produit" class="nav-link">
+                <i class="fas fa-plus-square"></i> Ajouter Produit
+            </a>
+            <a href="/entrees_sorties" class="nav-link">
+                <i class="fas fa-exchange-alt"></i> Entrées et sorties
+            </a>
+        </div>
+
+        <!-- Ventes -->
+        <a href="#ventes" class="nav-link dropdown-toggle">
+            <i class="fas fa-shopping-cart"></i> Ventes
+        </a>
+        <div class="nav-dropdown" id="ventes">
+            <a href="/ventes" class="nav-link">
+                <i class="fas fa-cart-plus"></i> Gérer Ventes
+            </a>
+            <a href="/historique_ventes" class="nav-link">
+                <i class="fas fa-history"></i> Historique des Ventes
+            </a>
+            <a href="/factures" class="nav-link">
+                <i class="fas fa-file-invoice"></i> Factures
+            </a>
+        </div>
+
+        <!-- Clients -->
+        <a href="#clients" class="nav-link dropdown-toggle">
+            <i class="fas fa-users"></i> Clients
+        </a>
+        <div class="nav-dropdown" id="clients">
+            <a href="/gestion_clients" class="nav-link">
+                <i class="fas fa-user-edit"></i> Gérer Clients
+            </a>
+            <a href="/ajouter_client" class="nav-link">
+                <i class="fas fa-user-plus"></i> Ajouter Client
+            </a>
+        </div>
+
+        <!-- Paramètres -->
+        <a href="#" class="nav-link">
+            <i class="fas fa-cogs"></i> Paramètres
+        </a>
+    </div>
+
+    <!-- Content -->
+    <div class="content">
+        <!-- Header -->
+        <div class="header">
+            <!-- Notifications -->
+            <div class="dropdown">
+                <button class="btn btn-light dropdown-toggle" id="notificationDropdown" data-bs-toggle="dropdown">
+                    <i class="fas fa-bell"></i> Notifications <span class="badge bg-danger">3</span>
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="notificationDropdown">
+                    <li><a class="dropdown-item" href="#"><i class="fas fa-bell"></i> Nouvelle vente</a></li>
+                </ul>
+            </div>
+            
+            <!-- Profile -->
+            <div class="dropdown">
+                <button class="btn btn-light dropdown-toggle" id="profileDropdown" data-bs-toggle="dropdown">
+                    <img src="../static/uploads/{{image}}" alt="Profile Picture"> {{firstname}} {{lastname}}
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="profileDropdown">
+                    <li><a class="dropdown-item" href="/profile"><i class="fas fa-user"></i> Votre Profil</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="/deconnexion"><i class="fas fa-sign-out-alt"></i> Déconnexion</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="container mt-5">
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 JS and dependencies -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
+    
+    <!-- Custom JS -->
+    <script>
+        // Activer les dropdowns
+        $(document).ready(function() {
+            $('.dropdown-toggle').dropdown();
+        });
+
+        // Fonction pour filtrer les produits dynamiquement
+        function filterProduits() {
+            const input = document.getElementById('searchProduit');
+            const filter = input.value.toLowerCase();
+            const produits = document.querySelectorAll('#produit_id option');
+
+            produits.forEach(produit => {
+                const text = produit.textContent.toLowerCase();
+                if (text.includes(filter)) {
+                    produit.style.display = '';
+                } else {
+                    produit.style.display = 'none';
+                }
+            });
+        }
+
+        // Ajouter un écouteur d'événement pour le champ de recherche
+        document.getElementById('searchProduit').addEventListener('input', filterProduits);
+    </script>
+</body>
+</html>
