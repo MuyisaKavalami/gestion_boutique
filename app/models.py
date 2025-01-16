@@ -3,14 +3,14 @@ from datetime import datetime
 
 # Modèle pour les produits
 class Produits(db.Model):
-    __tablename__ = 'produits'
     id = db.Column(db.Integer, primary_key=True)
     nom = db.Column(db.String(100), nullable=False)
-    description = db.Column(db.Text, nullable=True)
+    description = db.Column(db.String(200))
     prix = db.Column(db.Float, nullable=False)
     prix_achat = db.Column(db.Float, nullable=False)
     quantite = db.Column(db.Integer, nullable=False)
-    date_ajout = db.Column(db.DateTime, default=datetime.utcnow)
+    quantite_depot = db.Column(db.Integer, default=0)  # Nouvelle colonne
+
     def __repr__(self):
         return f"<Produit {self.nom}>"
 
@@ -91,5 +91,28 @@ class Panier(db.Model):
 
     produit = db.relationship('Produits', backref='panier')
 
+
+class Depenses(db.Model):
+    __tablename__ = 'depenses'
+    id = db.Column(db.Integer, primary_key=True)
+    description = db.Column(db.String(200), nullable=False)
+    montant = db.Column(db.Float, nullable=False)
+    date_depense = db.Column(db.DateTime, default=datetime.utcnow)
+    categorie = db.Column(db.String(100), nullable=True)
+    est_recurrente = db.Column(db.Boolean, default=False)
+    frequence_recurrence = db.Column(db.String(50), nullable=True)
+
     def __repr__(self):
-        return f"<Panier {self.id} pour le produit {self.produit_id}>"
+        return f"<Dépense {self.description} - {self.montant}>"
+    
+
+class TransactionDepot(db.Model):
+    __tablename__ = 'transaction_depot'
+    id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
+    produit_id = db.Column(db.Integer, db.ForeignKey('produits.id'), nullable=False)
+    quantite = db.Column(db.Integer, nullable=False)
+    type_transaction = db.Column(db.String(10), nullable=False)  # 'entree' ou 'sortie'
+    date_transaction = db.Column(db.DateTime, default=datetime.utcnow)
+    description = db.Column(db.Text, nullable=True)  # Nouvelle colonne
+
+    produit = db.relationship('Produits', backref='transactions_depot')

@@ -1,10 +1,10 @@
 {% extends "layout.html" %}
 
-{% block title %}Entrées et sorties des produits{% endblock %}
+{% block title %}Gestion des Transactions de Dépôt{% endblock %}
 
 {% block content %}
 <div class="container">
-    <h1 class="mt-5 text-center"><i class="fas fa-exchange-alt"></i> Entrées et sorties des produits</h1>
+    <h1 class="mt-5 text-center"><i class="fas fa-warehouse"></i> Gestion des Transactions de Dépôt</h1>
 
     <!-- Afficher les messages flash -->
     {% with messages = get_flashed_messages(with_categories=true) %}
@@ -18,35 +18,35 @@
         {% endif %}
     {% endwith %}
 
-    <!-- Formulaire pour ajouter une transaction -->
+    <!-- Formulaire pour ajouter une transaction de dépôt -->
     <div class="card mt-4 shadow-sm border-0">
         <div class="card-header text-white" style="background-color: #2C3E50;">
-            <h5 class="card-title mb-0"><i class="fas fa-plus-circle me-2"></i> Ajouter une transaction</h5>
+            <h5 class="card-title mb-0"><i class="fas fa-plus-circle me-2"></i> Ajouter une transaction de dépôt</h5>
         </div>
         <div class="card-body" style="background-color: #F8F9FA;">
-            <form id="transactionForm" action="{{ url_for('routes.ajouter_transaction') }}" method="POST">
+            <form id="transactionDepotForm" action="{{ url_for('routes.ajouter_transaction_depot') }}" method="POST">
                 <!-- Champ de recherche de produit -->
                 <div class="mb-4">
-                    <label for="searchProduit" class="form-label text-dark fw-bold">Rechercher un produit</label>
+                    <label for="searchProduitDepot" class="form-label text-dark fw-bold">Rechercher un produit</label>
                     <div class="input-group">
                         <span class="input-group-text bg-white border-end-0"><i class="fas fa-search" style="color: #34495E;"></i></span>
-                        <input type="text" id="searchProduit" class="form-control border-start-0" placeholder="Rechercher un produit..." list="produitList">
-                        <datalist id="produitList">
+                        <input type="text" id="searchProduitDepot" class="form-control border-start-0" placeholder="Rechercher un produit..." list="produitDepotList">
+                        <datalist id="produitDepotList">
                             {% for produit in produits %}
-                            <option value="{{ produit.nom }} ({{ produit.quantite }} en stock)" data-id="{{ produit.id }}">{{ produit.nom }}</option>
+                            <option value="{{ produit.nom }} ({{ produit.quantite_depot }} en dépôt)" data-id="{{ produit.id }}">{{ produit.nom }}</option>
                             {% endfor %}
                         </datalist>
                     </div>
-                    <input type="hidden" id="produit_id" name="produit_id">
-                    <div id="produitError" class="text-danger mt-2" style="display: none;">
+                    <input type="hidden" id="produit_depot_id" name="produit_id">
+                    <div id="produitDepotError" class="text-danger mt-2" style="display: none;">
                         <i class="fas fa-exclamation-circle me-2"></i>Le produit sélectionné n'existe pas. Veuillez choisir un produit valide dans la liste.
                     </div>
                 </div>
 
                 <!-- Sélection du type de transaction -->
                 <div class="mb-4">
-                    <label for="type" class="form-label text-dark fw-bold">Type de transaction</label>
-                    <select class="form-select" id="type" name="type" required>
+                    <label for="type_transaction" class="form-label text-dark fw-bold">Type de transaction</label>
+                    <select class="form-select" id="type_transaction" name="type_transaction" required>
                         <option value="entree">Entrée</option>
                         <option value="sortie">Sortie</option>
                     </select>
@@ -54,14 +54,14 @@
 
                 <!-- Champ de quantité -->
                 <div class="mb-4">
-                    <label for="quantite" class="form-label text-dark fw-bold">Quantité</label>
-                    <input type="number" class="form-control" id="quantite" name="quantite" required>
+                    <label for="quantite_depot" class="form-label text-dark fw-bold">Quantité</label>
+                    <input type="number" class="form-control" id="quantite_depot" name="quantite" required>
                 </div>
 
                 <!-- Champ de description -->
                 <div class="mb-4">
-                    <label for="description" class="form-label text-dark fw-bold">Description</label>
-                    <textarea class="form-control" id="description" name="description" rows="3" placeholder="Ajouter une description..."></textarea>
+                    <label for="description_depot" class="form-label text-dark fw-bold">Description</label>
+                    <textarea class="form-control" id="description_depot" name="description" rows="3" placeholder="Ajouter une description..."></textarea>
                 </div>
 
                 <!-- Bouton de soumission -->
@@ -72,37 +72,37 @@
         </div>
     </div>
 
-    <!-- Liste des transactions -->
+    <!-- Liste des transactions de dépôt -->
     <div class="card mt-4 shadow-sm border-0">
         <div class="card-header text-white" style="background-color: #27AE60;">
-            <h5 class="card-title mb-0"><i class="fas fa-list me-2"></i> Historique des transactions</h5>
+            <h5 class="card-title mb-0"><i class="fas fa-list me-2"></i> Historique des transactions de dépôt</h5>
             <div class="row mt-3 g-3">
                 <!-- Filtre de recherche -->
                 <div class="col-md-3">
                     <div class="input-group">
                         <span class="input-group-text"><i class="fas fa-search"></i></span>
-                        <input type="text" id="searchTransaction" class="form-control" placeholder="Rechercher une transaction...">
+                        <input type="text" id="searchTransactionDepot" class="form-control" placeholder="Rechercher une transaction...">
                     </div>
                 </div>
                 <!-- Filtre de date de début -->
                 <div class="col-md-3">
                     <div class="input-group">
                         <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
-                        <input type="date" id="filterDateStart" class="form-control" placeholder="Date de début">
+                        <input type="date" id="filterDateStartDepot" class="form-control" placeholder="Date de début">
                     </div>
                 </div>
                 <!-- Filtre de date de fin -->
                 <div class="col-md-3">
                     <div class="input-group">
                         <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
-                        <input type="date" id="filterDateEnd" class="form-control" placeholder="Date de fin">
+                        <input type="date" id="filterDateEndDepot" class="form-control" placeholder="Date de fin">
                     </div>
                 </div>
                 <!-- Filtre de type -->
                 <div class="col-md-3">
                     <div class="input-group">
                         <span class="input-group-text"><i class="fas fa-filter"></i></span>
-                        <select id="filterType" class="form-select">
+                        <select id="filterTypeDepot" class="form-select">
                             <option value="">Tous les types</option>
                             <option value="entree">Entrée</option>
                             <option value="sortie">Sortie</option>
@@ -112,10 +112,10 @@
             </div>
             <!-- Boutons de réinitialisation et d'impression -->
             <div class="mt-3">
-                <button id="resetFilters" class="btn btn-secondary btn-sm me-2">
+                <button id="resetFiltersDepot" class="btn btn-secondary btn-sm me-2">
                     <i class="fas fa-sync-alt me-2"></i>Réinitialiser les filtres
                 </button>
-                <button id="printButton" class="btn btn-light btn-sm">
+                <button id="printButtonDepot" class="btn btn-light btn-sm">
                     <i class="fas fa-print me-2"></i>Imprimer
                 </button>
             </div>
@@ -125,89 +125,95 @@
                 <table class="table table-hover table-striped">
                     <thead class="table-light">
                         <tr>
-                            <th class="text-center"><i class="fas fa-calendar-alt me-2"></i>Date</th>
-                            <th class="text-center"><i class="fas fa-box me-2"></i>Produit</th>
-                            <th class="text-center"><i class="fas fa-exchange-alt me-2"></i>Type</th>
-                            <th class="text-center"><i class="fas fa-hashtag me-2"></i>Quantité</th>
-                            <th class="text-center"><i class="fas fa-align-left me-2"></i>Description</th>
+                            <th><i class="fas fa-calendar-alt me-2"></i>Date</th>
+                            <th><i class="fas fa-box me-2"></i>Produit</th>
+                            <th><i class="fas fa-exchange-alt me-2"></i>Type</th>
+                            <th><i class="fas fa-hashtag me-2"></i>Quantité</th>
+                            <th><i class="fas fa-align-left me-2"></i>Description</th> <!-- Nouvelle colonne -->
                         </tr>
                     </thead>
-                    <tbody id="transactionTableBody">
-                        {% for transaction in transactions %}
-                        <tr data-type="{{ transaction.type }}" data-date="{{ transaction.date_transaction.strftime('%Y-%m-%d') }}">
-                            <td class="text-center">{{ transaction.date_transaction.strftime('%d/%m/%Y %H:%M') }}</td>
-                            <td class="text-center">{{ transaction.produit.nom }}</td>
-                            <td class="text-center">
-                                {% if transaction.type == 'entree' %}
-                                    <span class="badge" style="background-color: #2ECC71;"><i class="fas fa-arrow-down me-2"></i>Entrée</span>
-                                {% else %}
-                                    <span class="badge" style="background-color: #E74C3C;"><i class="fas fa-arrow-up me-2"></i>Sortie</span>
-                                {% endif %}
-                            </td>
-                            <td class="text-center">{{ transaction.quantite }}</td>
-                            <td class="text-center">{{ transaction.description }}</td>
-                        </tr>
-                        {% endfor %}
+                    <tbody id="transactionDepotTableBody">
+                        {% if transactions_depot %}
+                            {% for transaction in transactions_depot %}
+                            <tr data-type="{{ transaction.type_transaction }}" data-date="{{ transaction.date_transaction.strftime('%Y-%m-%d') }}">
+                                <td>{{ transaction.date_transaction.strftime('%d/%m/%Y %H:%M') }}</td>
+                                <td>{{ transaction.produit.nom }}</td>
+                                <td>
+                                    {% if transaction.type_transaction == 'entree' %}
+                                        <span class="badge bg-success">Entrée</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Sortie</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ transaction.quantite }}</td>
+                                <td>{{ transaction.description }}</td> <!-- Nouvelle colonne -->
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="5" class="text-center">Aucune transaction trouvée.</td>
+                            </tr>
+                        {% endif %}
                     </tbody>
                 </table>
             </div>
             <!-- Message si aucun résultat n'est trouvé -->
-            <div id="noResults" class="text-center mt-4" style="display: none;">
+            <div id="noResultsDepot" class="text-center mt-4" style="display: none;">
                 <i class="fas fa-exclamation-circle fa-2x text-muted"></i>
-                <p class="mt-2 text-muted">Aucune transaction ne correspond à vos critères de recherche.</p>
+                <p class="mt-2 text-muted">Aucune transaction de dépôt ne correspond à vos critères de recherche.</p>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Script pour la gestion des transactions -->
+<!-- Script pour la gestion des transactions de dépôt -->
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const searchProduit = document.getElementById('searchProduit');
-        const produitList = document.getElementById('produitList');
-        const produitIdInput = document.getElementById('produit_id');
-        const produitError = document.getElementById('produitError');
-        const transactionForm = document.getElementById('transactionForm');
-        const searchTransaction = document.getElementById('searchTransaction');
-        const filterDateStart = document.getElementById('filterDateStart');
-        const filterDateEnd = document.getElementById('filterDateEnd');
-        const filterType = document.getElementById('filterType');
-        const resetFilters = document.getElementById('resetFilters');
-        const printButton = document.getElementById('printButton');
-        const transactionTableBody = document.getElementById('transactionTableBody');
-        const noResults = document.getElementById('noResults');
+        const searchProduitDepot = document.getElementById('searchProduitDepot');
+        const produitDepotList = document.getElementById('produitDepotList');
+        const produitDepotIdInput = document.getElementById('produit_depot_id');
+        const produitDepotError = document.getElementById('produitDepotError');
+        const transactionDepotForm = document.getElementById('transactionDepotForm');
+        const searchTransactionDepot = document.getElementById('searchTransactionDepot');
+        const filterDateStartDepot = document.getElementById('filterDateStartDepot');
+        const filterDateEndDepot = document.getElementById('filterDateEndDepot');
+        const filterTypeDepot = document.getElementById('filterTypeDepot');
+        const resetFiltersDepot = document.getElementById('resetFiltersDepot');
+        const printButtonDepot = document.getElementById('printButtonDepot');
+        const transactionDepotTableBody = document.getElementById('transactionDepotTableBody');
+        const noResultsDepot = document.getElementById('noResultsDepot');
 
         // Mettre à jour l'ID du produit sélectionné
-        searchProduit.addEventListener('input', function() {
-            const selectedOption = Array.from(produitList.options).find(option => {
+        searchProduitDepot.addEventListener('input', function() {
+            const selectedOption = Array.from(produitDepotList.options).find(option => {
                 const produitName = option.value.split(' (')[0];
-                return produitName === searchProduit.value.split(' (')[0];
+                return produitName === searchProduitDepot.value.split(' (')[0];
             });
 
             if (selectedOption) {
-                produitIdInput.value = selectedOption.getAttribute('data-id');
-                produitError.style.display = 'none';
+                produitDepotIdInput.value = selectedOption.getAttribute('data-id');
+                produitDepotError.style.display = 'none';
             } else {
-                produitIdInput.value = '';
-                produitError.style.display = 'block';
+                produitDepotIdInput.value = '';
+                produitDepotError.style.display = 'block';
             }
         });
 
         // Empêcher la soumission du formulaire si le produit n'existe pas
-        transactionForm.addEventListener('submit', function(event) {
-            if (!produitIdInput.value) {
+        transactionDepotForm.addEventListener('submit', function(event) {
+            if (!produitDepotIdInput.value) {
                 event.preventDefault();
-                produitError.style.display = 'block';
+                produitDepotError.style.display = 'block';
             }
         });
 
-        // Gestion des filtres pour le tableau des transactions
-        function filterTransactions() {
-            const searchTerm = searchTransaction.value.toLowerCase();
-            const filterDateStartValue = filterDateStart.value;
-            const filterDateEndValue = filterDateEnd.value;
-            const filterTypeValue = filterType.value.toLowerCase();
-            const rows = transactionTableBody.getElementsByTagName('tr');
+        // Gestion des filtres pour le tableau des transactions de dépôt
+        function filterTransactionsDepot() {
+            const searchTerm = searchTransactionDepot.value.toLowerCase();
+            const filterDateStartValue = filterDateStartDepot.value;
+            const filterDateEndValue = filterDateEndDepot.value;
+            const filterTypeValue = filterTypeDepot.value.toLowerCase();
+            const rows = transactionDepotTableBody.getElementsByTagName('tr');
             let visibleRows = 0;
 
             for (let row of rows) {
@@ -249,26 +255,26 @@
             }
 
             // Afficher un message si aucun résultat n'est trouvé
-            noResults.style.display = visibleRows === 0 ? 'block' : 'none';
+            noResultsDepot.style.display = visibleRows === 0 ? 'block' : 'none';
         }
 
         // Réinitialiser les filtres
-        resetFilters.addEventListener('click', function() {
-            searchTransaction.value = '';
-            filterDateStart.value = '';
-            filterDateEnd.value = '';
-            filterType.value = '';
-            filterTransactions();
+        resetFiltersDepot.addEventListener('click', function() {
+            searchTransactionDepot.value = '';
+            filterDateStartDepot.value = '';
+            filterDateEndDepot.value = '';
+            filterTypeDepot.value = '';
+            filterTransactionsDepot();
         });
 
-        // Imprimer l'historique des transactions
-        printButton.addEventListener('click', function() {
+        // Imprimer l'historique des transactions de dépôt
+        printButtonDepot.addEventListener('click', function() {
             const printContents = `
                 <div style="text-align: center; margin-bottom: 20px;">
                     <h1 style="font-size: 24px; margin-bottom: 10px;">Nom de l'entreprise</h1>
-                    <h3 style="font-size: 18px; margin-bottom: 10px;">Historique des transactions</h3>
+                    <h3 style="font-size: 18px; margin-bottom: 10px;">Historique des transactions de dépôt</h3>
                     <p style="font-size: 14px; color: #555;">
-                        Période : ${filterDateStart.value || 'Toutes dates'} - ${filterDateEnd.value || 'Toutes dates'}
+                        Période : ${filterDateStartDepot.value || 'Toutes dates'} - ${filterDateEndDepot.value || 'Toutes dates'}
                     </p>
                     <p style="font-size: 12px; color: #777;">
                         Date d'impression : ${new Date().toLocaleString()}
@@ -281,11 +287,11 @@
                             <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Produit</th>
                             <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Type</th>
                             <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Quantité</th>
-                            <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Description</th>
+                            <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Description</th> <!-- Nouvelle colonne -->
                         </tr>
                     </thead>
                     <tbody>
-                        ${Array.from(transactionTableBody.querySelectorAll('tr'))
+                        ${Array.from(transactionDepotTableBody.querySelectorAll('tr'))
                             .filter(row => row.style.display !== 'none')
                             .map(row => `
                                 <tr>
@@ -293,7 +299,7 @@
                                     <td style="border: 1px solid #ddd; padding: 8px;">${row.cells[1].textContent}</td>
                                     <td style="border: 1px solid #ddd; padding: 8px;">${row.cells[2].innerHTML}</td>
                                     <td style="border: 1px solid #ddd; padding: 8px;">${row.cells[3].textContent}</td>
-                                    <td style="border: 1px solid #ddd; padding: 8px;">${row.cells[4].textContent}</td>
+                                    <td style="border: 1px solid #ddd; padding: 8px;">${row.cells[4].textContent}</td> <!-- Nouvelle colonne -->
                                 </tr>
                             `).join('')}
                     </tbody>
@@ -304,7 +310,7 @@
             printWindow.document.write(`
                 <html>
                     <head>
-                        <title>Historique des transactions</title>
+                        <title>Historique des transactions de dépôt</title>
                         <style>
                             body { font-family: Arial, sans-serif; margin: 20px; }
                             table { width: 100%; border-collapse: collapse; }
@@ -323,37 +329,10 @@
         });
 
         // Appliquer les filtres lors de la modification des champs
-        searchTransaction.addEventListener('input', filterTransactions);
-        filterDateStart.addEventListener('change', filterTransactions);
-        filterDateEnd.addEventListener('change', filterTransactions);
-        filterType.addEventListener('change', filterTransactions);
+        searchTransactionDepot.addEventListener('input', filterTransactionsDepot);
+        filterDateStartDepot.addEventListener('change', filterTransactionsDepot);
+        filterDateEndDepot.addEventListener('change', filterTransactionsDepot);
+        filterTypeDepot.addEventListener('change', filterTransactionsDepot);
     });
 </script>
-
-<style>
-    /* Ajouter des styles pour améliorer l'apparence du tableau */
-    .table {
-        width: 100%;
-        border-collapse: collapse;
-    }
-
-    .table th, .table td {
-        padding: 12px;
-        text-align: center;
-        border: 1px solid #ddd;
-    }
-
-    .table th {
-        background-color: #f8f9fa;
-        font-weight: bold;
-    }
-
-    .table-striped tbody tr:nth-of-type(odd) {
-        background-color: #f9f9f9;
-    }
-
-    .table-hover tbody tr:hover {
-        background-color: #f1f1f1;
-    }
-</style>
 {% endblock %}

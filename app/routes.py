@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, make_response
-from .models import db, Produits, Factures, Ventes, Benefices, Panier, TransactionsProduit, Clients
+from .models import db, Produits, Factures, Ventes, Benefices, Panier, TransactionsProduit, Clients, Depenses,TransactionDepot
 from datetime import datetime
 import uuid
 
@@ -293,3 +293,287 @@ def imprimer_facture(id):
 def historique_ventes():
     ventes = Ventes.query.join(Factures).order_by(Factures.date_facture.asc()).all()
     return render_template('historique_ventes.html', ventes=ventes)
+
+# Route pour afficher la liste des dépenses ordinaires
+@bp.route('/depenses_ordinaires')
+def gestion_depenses_ordinaires():
+    depenses_ordinaires = Depenses.query.filter_by(est_recurrente=False).order_by(Depenses.date_depense.desc()).all()
+    return render_template('gestion_depenses_ordinaires.html', depenses=depenses_ordinaires)
+
+# Route pour afficher la liste des dépenses récurrentes
+@bp.route('/depenses_recurrentes')
+def gestion_depenses_recurrentes():
+    depenses_recurrentes = Depenses.query.filter_by(est_recurrente=True).order_by(Depenses.date_depense.desc()).all()
+    return render_template('gestion_depenses_recurrentes.html', depenses=depenses_recurrentes)
+
+# Route pour ajouter une dépense
+@bp.route('/ajouter_depense', methods=['POST'])
+def ajouter_depense():
+    try:
+        description = request.form['description']
+        montant = float(request.form['montant'])
+        categorie = request.form.get('categorie', '')
+        est_recurrente = 'est_recurrente' in request.form  # Vérifie si la case est cochée
+        frequence_recurrence = request.form.get('frequence_recurrence', None) if est_recurrente else None
+
+        nouvelle_depense = Depenses(
+            description=description,
+            montant=montant,
+            categorie=categorie,
+            est_recurrente=est_recurrente,
+            frequence_recurrence=frequence_recurrence
+        )
+        db.session.add(nouvelle_depense)
+        db.session.commit()
+        flash("Dépense ajoutée avec succès!", "success")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Erreur lors de l'ajout de la dépense: {e}", "danger")
+    return redirect(url_for('routes.gestion_depenses_ordinaires'))
+
+# Route pour modifier une dépense
+@bp.route('/modifier_depense/<int:id>', methods=['POST'])
+def modifier_depense(id):
+    depense = Depenses.query.get_or_404(id)
+    try:
+        depense.description = request.form['description']
+        depense.montant = float(request.form['montant'])
+        depense.categorie = request.form.get('categorie', '')
+        depense.est_recurrente = 'est_recurrente' in request.form
+        depense.frequence_recurrence = request.form.get('frequence_recurrence', None) if depense.est_recurrente else None
+        db.session.commit()
+        flash("Dépense modifiée avec succès!", "success")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Erreur lors de la modification de la dépense: {e}", "danger")
+    return redirect(url_for('routes.gestion_depenses_ordinaires'))
+
+# Route pour supprimer une dépense
+@bp.route('/supprimer_depense', methods=['POST'])
+def supprimer_depense():
+    id = request.form['idDel']
+    depense = Depenses.query.get_or_404(id)
+    try:
+        db.session.delete(depense)
+        db.session.commit()
+        flash("Dépense supprimée avec succès!", "success")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Erreur lors de la suppression de la dépense: {e}", "danger")
+    return redirect(url_for('routes.gestion_depenses_ordinaires'))
+
+# Route pour ajouter une dépense récurrente
+@bp.route('/ajouter_depense_recurrente', methods=['POST'])
+def ajouter_depense_recurrente():
+    try:
+        description = request.form['description']
+        montant = float(request.form['montant'])
+        categorie = request.form.get('categorie', '')
+        frequence_recurrence = request.form.get('frequence_recurrence', None)
+
+        nouvelle_depense = Depenses(
+            description=description,
+            montant=montant,
+            categorie=categorie,
+            est_recurrente=True,  # Toujours récurrente pour cette route
+            frequence_recurrence=frequence_recurrence
+        )
+        db.session.add(nouvelle_depense)
+        db.session.commit()
+        flash("Dépense récurrente ajoutée avec succès!", "success")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Erreur lors de l'ajout de la dépense récurrente: {e}", "danger")
+    return redirect(url_for('routes.gestion_depenses_recurrentes'))
+
+# Route pour modifier une dépense récurrente
+@bp.route('/modifier_depense_recurrente/<int:id>', methods=['POST'])
+def modifier_depense_recurrente(id):
+    depense = Depenses.query.get_or_404(id)
+    try:
+        depense.description = request.form['description']
+        depense.montant = float(request.form['montant'])
+        depense.categorie = request.form.get('categorie', '')
+        depense.frequence_recurrence = request.form.get('frequence_recurrence', None)
+        db.session.commit()
+        flash("Dépense récurrente modifiée avec succès!", "success")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Erreur lors de la modification de la dépense récurrente: {e}", "danger")
+    return redirect(url_for('routes.gestion_depenses_recurrentes'))
+
+# Route pour supprimer une dépense récurrente
+@bp.route('/supprimer_depense_recurrente', methods=['POST'])
+def supprimer_depense_recurrente():
+    id = request.form['idDel']
+    depense = Depenses.query.get_or_404(id)
+    try:
+        db.session.delete(depense)
+        db.session.commit()
+        flash("Dépense récurrente supprimée avec succès!", "success")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Erreur lors de la suppression de la dépense récurrente: {e}", "danger")
+    return redirect(url_for('routes.gestion_depenses_recurrentes'))
+
+from datetime import datetime
+
+
+from datetime import datetime, timedelta
+
+@bp.route('/benefices')
+def gestion_benefices():
+    # Récupérer les dates de filtrage (si elles sont fournies)
+    date_debut = request.args.get('date_debut')
+    date_fin = request.args.get('date_fin')
+
+    # Si les dates ne sont pas fournies, utiliser la date du jour
+    if not date_debut or not date_fin:
+        aujourd_hui = datetime.now().strftime('%Y-%m-%d')
+        date_debut = aujourd_hui
+        date_fin = aujourd_hui
+
+    # Convertir les dates en objets datetime pour le filtrage
+    date_debut_obj = datetime.strptime(date_debut, '%Y-%m-%d')
+    date_fin_obj = datetime.strptime(date_fin, '%Y-%m-%d') + timedelta(days=1)  # Ajouter 1 jour pour inclure toute la journée
+
+    # Base de la requête pour les ventes
+    query_ventes = db.session.query(
+        Produits.nom,
+        Factures.date_facture.label('date_facture'),  # Ajouter la date de la facture
+        db.func.sum(Ventes.quantite).label('quantite_vendue'),
+        db.func.sum(Ventes.montant_total).label('montant_ventes'),
+        db.func.sum(Ventes.quantite * Produits.prix_achat).label('cout_achat'),
+        db.func.sum(Ventes.montant_total - (Ventes.quantite * Produits.prix_achat)).label('benefice')
+    ).join(Produits, Ventes.produit_id == Produits.id) \
+    .join(Factures, Ventes.facture_id == Factures.id)  # Jointure avec Factures
+
+    # Appliquer le filtrage par date
+    query_ventes = query_ventes.filter(Factures.date_facture >= date_debut_obj) \
+                               .filter(Factures.date_facture < date_fin_obj)  # Utiliser < pour exclure la date de fin
+
+    # Calculer les bénéfices par produit
+    benefices_par_produit = query_ventes.group_by(Produits.nom, Factures.date_facture).all()
+
+    # Calculer le total des ventes
+    total_ventes = db.session.query(db.func.sum(Ventes.montant_total)) \
+        .join(Factures, Ventes.facture_id == Factures.id) \
+        .filter(Factures.date_facture >= date_debut_obj) \
+        .filter(Factures.date_facture < date_fin_obj) \
+        .scalar() or 0
+
+    # Calculer le total des coûts des marchandises vendues (corrigé)
+    total_couts = db.session.query(
+        db.func.sum(Ventes.quantite * Produits.prix_achat)
+    ).join(Produits, Ventes.produit_id == Produits.id) \
+        .join(Factures, Ventes.facture_id == Factures.id) \
+        .filter(Factures.date_facture >= date_debut_obj) \
+        .filter(Factures.date_facture < date_fin_obj) \
+        .scalar() or 0
+
+    # Calculer le bénéfice brut (total des ventes - total des coûts)
+    benefice_brut = total_ventes - total_couts
+
+    # Calculer le total des dépenses (ordinaires et récurrentes)
+    total_depenses = db.session.query(db.func.sum(Depenses.montant)) \
+        .filter(Depenses.date_depense >= date_debut_obj) \
+        .filter(Depenses.date_depense < date_fin_obj) \
+        .scalar() or 0
+
+    # Calculer le bénéfice net (bénéfice brut - total des dépenses)
+    benefice_net = benefice_brut - total_depenses
+
+    return render_template(
+        'gestion_benefices.html',
+        total_ventes=total_ventes,
+        total_couts=total_couts,
+        benefice_brut=benefice_brut,
+        total_depenses=total_depenses,
+        benefice_net=benefice_net,
+        benefices_par_produit=benefices_par_produit,
+        date_debut=date_debut,
+        date_fin=date_fin
+    )
+
+# Route pour afficher les transactions de dépôt
+@bp.route('/gestion_transactions_depot')
+def gestion_transactions_depot():
+    transactions_depot = TransactionDepot.query.order_by(TransactionDepot.date_transaction.desc()).all()
+    produits = Produits.query.all()
+    return render_template('gestion_transactions_depot.html', transactions_depot=transactions_depot, produits=produits)
+
+# Route pour ajouter une transaction de dépôt
+@bp.route('/ajouter_transaction_depot', methods=['POST'])
+def ajouter_transaction_depot():
+    try:
+        produit_id = int(request.form['produit_id'])
+        quantite = int(request.form['quantite'])
+        type_transaction = request.form['type_transaction']
+        description = request.form.get('description', '')  # Récupérer la description
+
+        produit = Produits.query.get_or_404(produit_id)
+
+        if type_transaction == 'entree':
+            produit.quantite_depot += quantite
+        elif type_transaction == 'sortie':
+            if produit.quantite_depot < quantite:
+                flash("Quantité insuffisante en stock!", "danger")
+                return redirect(url_for('routes.gestion_transactions_depot'))
+            produit.quantite_depot -= quantite
+        else:
+            flash("Type de transaction invalide!", "danger")
+            return redirect(url_for('routes.gestion_transactions_depot'))
+
+        nouvelle_transaction = TransactionDepot(
+            produit_id=produit_id,
+            quantite=quantite,
+            type_transaction=type_transaction,
+            description=description  # Ajouter la description
+        )
+        db.session.add(nouvelle_transaction)
+        db.session.commit()
+        flash("Transaction de dépôt ajoutée avec succès!", "success")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Erreur lors de l'ajout de la transaction de dépôt: {e}", "danger")
+    return redirect(url_for('routes.gestion_transactions_depot'))
+
+# Récupérer tous les produits avec leur quantité en dépôt
+@bp.route('/stock_depot')
+def stock_depot():
+    # Récupérer tous les produits avec leur quantité en dépôt
+    produits = Produits.query.filter(Produits.quantite_depot > 0).all()
+    return render_template('stock_depot.html', produits=produits)
+
+@bp.route('/stock_boutique')
+def stock_boutique():
+    # Récupérer tous les produits avec leur quantité en boutique
+    produits = Produits.query.filter(Produits.quantite > 0).all()
+    return render_template('stock_boutique.html', produits=produits)
+
+@bp.route('/stock_global')
+def stock_global():
+    # Récupérer tous les produits avec leur quantité en magasin et en dépôt
+    produits = Produits.query.all()
+    
+    # Calculer le coût total pour chaque produit et le coût total global
+    cout_total_global = 0
+    produits_avec_cout = []
+    
+    for produit in produits:
+        cout_total_produit = (produit.quantite + produit.quantite_depot) * produit.prix_achat
+        cout_total_global += cout_total_produit
+        produits_avec_cout.append({
+            'produit': {
+                'id': produit.id,
+                'nom': produit.nom,
+                'quantite': produit.quantite,
+                'quantite_depot': produit.quantite_depot,
+                'prix_achat': produit.prix_achat,
+                'description': produit.description,
+                # Ajoutez d'autres champs si nécessaire
+            },
+            'cout_total': cout_total_produit
+        })
+    
+    return render_template('stock_global.html', produits_avec_cout=produits_avec_cout, cout_total_global=cout_total_global)
